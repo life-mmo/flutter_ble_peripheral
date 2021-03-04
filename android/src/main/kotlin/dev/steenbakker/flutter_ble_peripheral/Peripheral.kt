@@ -21,7 +21,7 @@ class Peripheral {
     private var mBluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
     private var advertiseCallback: AdvertiseCallback? = null
     private val tag = "FlutterBlePeripheral"
-    
+
     private val mAdvertiseCallback = object : AdvertiseCallback() {
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
             super.onStartSuccess(settingsInEffect)
@@ -29,7 +29,7 @@ class Peripheral {
             //advertisingCallback(true)
             isAdvertising = true
         }
-        
+
         override fun onStartFailure(errorCode: Int) {
             super.onStartFailure(errorCode)
             Log.e(tag, "ERROR while starting advertising: $errorCode")
@@ -67,13 +67,15 @@ class Peripheral {
             isAdvertising = false
         }
     }
-    
+
     fun init(context: Context) {
         if (mBluetoothLeAdvertiser == null) {
-            mBluetoothLeAdvertiser = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter.bluetoothLeAdvertiser
+            if ((context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter != null) {
+                mBluetoothLeAdvertiser = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter.bluetoothLeAdvertiser
+            }
         }
     }
-    
+
     fun start(data: Data) {
         val settings = buildAdvertiseSettings()
         val advertiseData = buildAdvertiseData(data)
@@ -94,7 +96,7 @@ class Peripheral {
         advertiseCallback = null
         isAdvertising = false
     }
-    
+
     private fun buildAdvertiseData(data: Data): AdvertiseData? {
         /**
          * Note: There is a strict limit of 31 Bytes on packets sent over BLE Advertisements.
