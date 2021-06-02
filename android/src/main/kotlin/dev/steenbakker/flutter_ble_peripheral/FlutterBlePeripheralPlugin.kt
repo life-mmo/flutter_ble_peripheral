@@ -6,90 +6,85 @@
 
 package dev.steenbakker.flutter_ble_peripheral
 
-import android.content.Context
+import android.bluetooth.le.AdvertiseSettings
 import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.*
 
-
 class FlutterBlePeripheralPlugin: FlutterPlugin, MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
 
-  private var applicationContext: Context? = null
   private var methodChannel: MethodChannel? = null
   private var eventChannel: EventChannel? = null
-  private var peripheral: Peripheral? = null
-  private var eventSink: EventChannel.EventSink? = null
+  private var peripheral: Peripheral = Peripheral()
 
-  /** Plugin registration embedding v1 */
-  companion object {
-    @JvmStatic
-    fun registerWith(registrar: PluginRegistry.Registrar) {
-      FlutterBlePeripheralPlugin().onAttachedToEngine(registrar.context(), registrar.messenger())
-    }
+  private var eventSink: EventChannel.EventSink? = null
+  private var advertiseCallback: (Boolean) -> Unit = { isAdvertising ->
+    eventSink?.success(isAdvertising)
   }
+
 
   /** Plugin registration embedding v2 */
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    onAttachedToEngine(flutterPluginBinding.applicationContext, flutterPluginBinding.binaryMessenger)
-  }
-
-  private fun onAttachedToEngine(applicationContext: Context, messenger: BinaryMessenger) {
-    this.applicationContext = applicationContext
-    methodChannel = MethodChannel(messenger, "dev.steenbakker.flutter_ble_peripheral/ble_state")
-    eventChannel = EventChannel(messenger, "dev.steenbakker.flutter_ble_peripheral/ble_event")
+    methodChannel = MethodChannel(flutterPluginBinding.binaryMessenger, "dev.steenbakker.flutter_ble_peripheral/ble_state")
+    eventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "dev.steenbakker.flutter_ble_peripheral/ble_event")
     methodChannel!!.setMethodCallHandler(this)
     eventChannel!!.setStreamHandler(this)
-    peripheral = Peripheral()
-    peripheral!!.init(applicationContext)
+    peripheral.init()
   }
 
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
-    applicationContext = null
     methodChannel!!.setMethodCallHandler(null)
     methodChannel = null
     eventChannel!!.setStreamHandler(null)
     eventChannel = null
-    peripheral = null
   }
-
-  // TODO: Add different functions
+  
   // TODO: Add permission check
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: MethodChannel.Result) {
     when (call.method) {
       "start" -> startPeripheral(call, result)
       "stop" -> stopPeripheral(result)
-      "isAdvertising" -> result.success(peripheral!!.isAdvertising())
-//      "isTransmissionSupported" -> isTransmissionSupported(result)
+      "isAdvertising" -> result.success(peripheral.isAdvertising())
       else -> result.notImplemented()
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   private fun startPeripheral(call: MethodCall, result: MethodChannel.Result) {
     if (call.arguments !is Map<*, *>) {
       throw IllegalArgumentException("Arguments are not a map! " + call.arguments)
     }
 
     val arguments = call.arguments as Map<String, Any>
-    val beaconData = Data(
-            arguments["uuid"] as String,
-            arguments["transmissionPowerIncluded"] as Boolean?,
-            arguments["manufacturerId"] as Int?,
-            arguments["manufacturerData"] as List<Int>?,
-            arguments["serviceDataUuid"] as String?,
-            arguments["serviceData"] as List<Int>?,
-            arguments["includeDeviceName"] as Boolean?
-    )
+    val advertiseData = Data()
+    (arguments["uuid"] as String?)?.let { advertiseData.uuid = it }
+    (arguments["manufacturerId"] as Int?)?.let { advertiseData.manufacturerId = it }
+    (arguments["manufacturerData"] as List<Int>?)?.let { advertiseData.manufacturerData = it }
+    (arguments["serviceDataUuid"] as String?)?.let { advertiseData.serviceDataUuid = it }
+    (arguments["serviceData"] as List<Int>?)?.let { advertiseData.serviceData = it }
+    (arguments["includeDeviceName"] as Boolean?)?.let { advertiseData.includeDeviceName = it }
+    (arguments["transmissionPowerIncluded"] as Boolean?)?.let { advertiseData.includeTxPowerLevel = it }
+    (arguments["advertiseMode"] as Int?)?.let { advertiseData.advertiseMode = it }
+    (arguments["connectable"] as Boolean?)?.let { advertiseData.connectable = it }
+    (arguments["timeout"] as Int?)?.let { advertiseData.timeout = it }
+    (arguments["txPowerLevel"] as Int?)?.let { advertiseData.txPowerLevel = it }
+    
+    val advertiseSettings: AdvertiseSettings = AdvertiseSettings.Builder()
+            .setAdvertiseMode(advertiseData.advertiseMode)
+            .setConnectable(advertiseData.connectable)
+            .setTimeout(advertiseData.timeout)
+            .setTxPowerLevel(advertiseData.txPowerLevel)
+            .build()
 
-    peripheral!!.start(beaconData)
+    peripheral.start(advertiseData, advertiseSettings, advertiseCallback)
     result.success(null)
   }
 
   private fun stopPeripheral(result: MethodChannel.Result) {
-    peripheral!!.stop()
+    peripheral.stop()
     result.success(null)
   }
-
-  // TODO: Fix listeners
+  
   override fun onListen(event: Any?, eventSink: EventChannel.EventSink) {
     this.eventSink = eventSink
   }

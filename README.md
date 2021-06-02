@@ -1,7 +1,7 @@
 
 [![pub package](https://img.shields.io/pub/v/flutter_ble_peripheral?include_prereleases)](https://pub.dartlang.org/packages/flutter_ble_peripheral)
-[![Join the chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/flutter_ble_peripheral/community)
-[![Workflow](https://github.com/juliansteenbakker/flutter_ble_peripheral/workflows/Build%20Flutter/badge.svg?branch=master)](https://github.com/juliansteenbakker/flutter_ble_peripheral/actions)
+[![Join the chat](https://img.shields.io/discord/827432913896341534)](https://discord.gg/XeyJZhaczm)
+[![Workflow](https://github.com/juliansteenbakker/flutter_ble_peripheral/actions/workflows/flutter_format.yml/badge.svg?branch=master)](https://github.com/juliansteenbakker/flutter_ble_peripheral/actions)
 
 # FlutterBlePeripheral
 
@@ -18,8 +18,9 @@ Since this plugin is currently being developed, limited functionality will be av
 | Functionality        | Android           | iOS  | Description |
 | -------------------- |:----------------:|:-----:| --------------|
 | Advertise UUID     | :white_check_mark: | :white_check_mark:  | Set and advertise a custom uuid. |
-| Advertise custom service    | :white_check_mark:  |   | Advertise a custom service. |
-| Advertise custom characteristic   | :white_check_mark:  |   | Advertise a custom characteristic with any of the following specifications. |
-| Read characteristic     |  |   | Enable the possibility to read a value. |
-| Write characteristic     |  |   | Enable the possibility to write a value. |
-| Notify characteristic    |  |   | Enable the possibility to subscribe and notify a value. |
+| Advertise ManufacturerData     | :white_check_mark: | :x:  | Set and advertise custom data. *not possible on iOS* |
+| Advertise custom service    | :white_check_mark: | :x: | Advertise a custom service. *not possible on iOS* |
+
+## How to use
+Please check the example app to see how to broadcast data.
+Note that iOS does not support a lot of options. Please see `AdvertiseData` to see which options are supported by iOS & Android.

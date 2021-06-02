@@ -64,12 +64,11 @@ class Peripheral : NSObject, CBPeripheralManagerDelegate {
 
 class AdvertiseData {
     var uuid: String
-    var transmissionPower: NSNumber?
-//    var identifier: String
+    //CBAdvertisementDataLocalNameKey
+    var localName: String
     
-    init(uuid: String, transmissionPower: NSNumber?) {
-        self.uuid = uuid
-        self.transmissionPower = transmissionPower
-//        self.identifier = identifier
+    init(uuid: String, localName: String) {
+        self.uuid = uuid;
+        self.localName = localName
     }
 }
